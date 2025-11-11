@@ -1,0 +1,236 @@
+/* --------------------------------------------------------
+   Tailwind + Bootstrap base imports
+-------------------------------------------------------- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --------------------------------------------------------
+   Global Layout & Typography
+-------------------------------------------------------- */
+body {
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  color: #212529;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure container sections (main) have spacing, but navbar stays full width */
+main {
+  margin: 1rem auto;
+  padding: 0 1rem;
+  max-width: 1400px;
+}
+
+/* --------------------------------------------------------
+   Navbar (Full width, compact)
+-------------------------------------------------------- */
+.navbar {
+  background-color: #212529 !important;
+  font-size: 1rem;
+  min-height: 56px; /* compact height */
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  margin: 0 !important;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Brand / Logo */
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  color: #ffffff; /* always white */
+  text-decoration: none;
+}
+
+.navbar-brand i {
+  font-size: 1.25rem;
+  margin-right: 0.4rem;
+  color: #ffffff;
+}
+
+/* Navbar links / buttons */
+.navbar-nav .nav-link,
+.navbar .btn-outline-light {
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.35rem 0.75rem; /* compact, readable */
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.25s ease;
+}
+
+.navbar-nav .nav-link i,
+.navbar .btn-outline-light i {
+  margin-right: 0.5rem;
+  font-size: 1.1rem;
+}
+
+/* Hover effect for outline buttons */
+.navbar-nav .nav-link:hover,
+.btn-outline-light:hover {
+  background-color: #ffffff;
+  color: #212529;
+}
+
+/* Active page behaves like hover */
+.navbar-nav .nav-link.active,
+.btn-outline-light.active-btn {
+  background-color: #ffffff;
+  color: #212529;
+}
+
+/* Button in navbar (success removed, replaced with outline-light) */
+.navbar .btn-success {
+  font-size: 1rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.navbar .btn-success:hover {
+  background-color: #157347;
+}
+
+/* Dropdown */
+.dropdown-menu {
+  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* --------------------------------------------------------
+   Mobile Navbar 
+-------------------------------------------------------- */
+@media (max-width: 992px) {
+  .navbar-nav {
+    gap: 0.3rem;
+  }
+
+  /* Compact navbar links on mobile (desktop navbar already compact) */
+  .navbar-nav .nav-link,
+  .navbar .btn-outline-light {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Hamburger button */
+  .hamburger-btn {
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.25s ease;
+  }
+
+  .hamburger-line {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background-color: #ffffff;
+    border-radius: 1px;
+  }
+
+  .hamburger-btn:hover,
+  .hamburger-btn:focus {
+    background-color: #ffffff;
+    color: #212529;
+  }
+
+  .hamburger-btn:hover .hamburger-line,
+  .hamburger-btn:focus .hamburger-line {
+    background-color: #212529;
+  }
+
+  /* Add breathing space for dropdown items in hamburger menu */
+  .dropdown-menu .dropdown-item {
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+  }
+
+  .navbar .btn-success {
+    padding: 0.5rem 0.85rem;
+    margin-top: 0.25rem;
+  }
+}
+
+/* --------------------------------------------------------
+   Cards
+-------------------------------------------------------- */
+.assessment-card {
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease-in-out;
+}
+
+.assessment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.assessment-card .card-body {
+  padding: 1rem 1.25rem;
+}
+
+/* --------------------------------------------------------
+   Buttons general
+-------------------------------------------------------- */
+.btn {
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Success buttons */
+.btn-success {
+  background-color: #198754;
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: #157347;
+}
+
+/* --------------------------------------------------------
+   Alerts
+-------------------------------------------------------- */
+.alert {
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+}
+
+/* --------------------------------------------------------
+   Utility tweaks
+-------------------------------------------------------- */
+.text-small {
+  font-size: 0.9rem !important;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.rounded-3 {
+  border-radius: 0.75rem !important;
+}
