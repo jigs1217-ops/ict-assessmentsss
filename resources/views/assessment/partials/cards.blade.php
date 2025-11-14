@@ -1,14 +1,12 @@
 @php
-    // Total number of assessments across all pages
     $total = $assessments->total();
-    // Counter starts from total minus items before this page
     $counter = $total - ($assessments->currentPage() - 1) * $assessments->perPage();
 @endphp
 
 <div class="row g-3 justify-content-start">
     @forelse($assessments as $assessment)
-        <div class="{{ $assessments->count() === 1 ? 'col-12' : 'col-12 col-sm-6 col-md-4 col-lg-3' }} d-flex">
-            <div class="card assessment-card shadow-sm border-0 flex-fill h-100">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex justify-content-center">
+            <div class="card assessment-card shadow-sm border-0 flex-fill h-100" style="max-width: 100%;">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center p-2">
                     <div>
                         <span class="badge bg-secondary rounded-pill me-2">#{{ $counter-- }}</span>
@@ -31,12 +29,11 @@
                 </div>
 
                 <div class="card-footer bg-light border-0 d-flex gap-1 mt-auto">
-                    <a href="{{ route('assessment.viewbt', $assessment->id) }}"
-                       data-bs-toggle="ajax-modal"
-                       data-title="View Assessment"
-                       class="btn btn-sm btn-outline-primary flex-grow-1">
+                    <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1 view-btn"
+                            data-id="{{ $assessment->id }}"
+                            data-name="{{ $assessment->name }}">
                         <i class="bi bi-eye"></i> View
-                    </a>
+                    </button>
                     <a href="{{ route('assessment.edit', $assessment->id) }}"
                        class="btn btn-sm btn-outline-secondary flex-grow-1">
                         <i class="bi bi-pencil"></i> Edit

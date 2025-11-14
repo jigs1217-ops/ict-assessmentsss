@@ -3,70 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Models\Assessment;
-use App\Helpers\DeptSecHelper;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // 1) Get aggregated counts from DB for the current user
-        $userId = auth()->id();
+        // Equipment condition counts
+        $conditionData = Assessment::select('condition', DB::raw('COUNT(*) as total'))
+            ->groupBy('condition')
+            ->pluck('total', 'condition');
 
-        $rows = Assessment::select(
-                'department',
-                'division',
-                DB::raw('COUNT(*) as total'),
-                DB::raw('SUM(CASE WHEN date_assessed IS NULL THEN 1 ELSE 0 END) as pending')
-            )
-            ->where('user_id', $userId)
-            ->groupBy('department', 'division')
-            ->orderBy('department')
-            ->orderBy('division')
-            ->get();
+        // Department counts (replace 'department' with actual column if needed)
+        $departmentData = Assessment::select('department', DB::raw('COUNT(*) as total'))
+            ->groupBy('department')
+            ->pluck('total', 'department');
 
-        // If there are no rows at all, return empty
-        if ($rows->isEmpty()) {
-            return view('dashboard', ['dashboardData' => []]);
-        }
-
-        // 2) Load DeptSec helper for mapping department code -> display name (if available)
-        $deptSecList = DeptSecHelper::DeptSecList();
-
-        // 3) Build a grouped structure: department_code => [ department_name, divisions[...] ]
-        $grouped = [];
-
-        foreach ($rows as $r) {
-            $deptCode = $r->department;
-            $divisionName = $r->division;
-            $total = (int) $r->total;
-            $pending = (int) $r->pending;
-
-            // find display name from helper if exists; fallback to deptCode
-            $displayName = $deptCode;
-            if (isset($deptSecList[$deptCode]) && count($deptSecList[$deptCode]) > 0) {
-                $displayName = $deptSecList[$deptCode][0];
-            }
-
-            if (!isset($grouped[$deptCode])) {
-                $grouped[$deptCode] = [
-                    'department_code' => $deptCode,
-                    'department_name' => $displayName,
-                    'divisions' => [],
-                ];
-            }
-
-            $grouped[$deptCode]['divisions'][] = [
-                'division' => $divisionName,
-                'total' => $total,
-                'pending' => $pending,
-            ];
-        }
-
-        // Convert grouped map to indexed array for blade
-        $dashboardData = array_values($grouped);
-
-        return view('dashboard', compact('dashboardData'));
+        return view('dashboard', compact('conditionData', 'departmentData'));
     }
 }

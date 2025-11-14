@@ -117,6 +117,7 @@
             </button>
         </div>
     </div>
+    
 
     <!-- Cards Container -->
     <div id="cardContainer">
@@ -125,6 +126,8 @@
 
     <!-- Delete Modal -->
     @include('assessment.partials.deletebt')
+    <!-- View Modal -->
+@include('assessment.partials.viewbt')
 
 </div>
 @endsection
@@ -260,6 +263,95 @@ $(function() {
             }
         });
     });
+// ---------------- View Modal
+let currentViewId = null;
+$(document).on('click', '.view-btn', function(){
+    currentViewId = $(this).data('id');
+    const assessmentName = $(this).data('name');
+    
+    // Show loading state
+    $('#viewbtModal').find('.modal-body *').each(function() {
+        if ($(this).is('div') && $(this).attr('id') && $(this).attr('id').startsWith('modal')) {
+            $(this).text('Loading...');
+        }
+    });
+    
+    // Make AJAX call to get assessment details using your existing route
+    $.ajax({
+        url: `/assessment/${currentViewId}/viewbt`,
+        type: 'GET',
+        dataType: 'json', // Ensure we're expecting JSON
+        success: function(data) {
+            // Populate modal fields
+            $('#modalDateAcquired').text(data.date_acquired);
+            $('#modalDateAssessed').text(data.date_assessed || '—');
+            $('#modalAssessedBy').text(data.assessed_by || '—');
+            $('#modalName').text(data.name);
+            $('#modalCareOf').text(data.care_of || '—');
+            $('#modalDepartment').text(data.department);
+            $('#modalDivision').text(data.division);
+            $('#modalEquipmentType').text(data.equipment_type);
+            $('#modalModel').text(data.model);
+            
+            // Handle optional fields
+            if(data.motherboard) {
+                $('#modalMotherboard').text(data.motherboard);
+                $('#motherboardRow').show();
+            } else {
+                $('#motherboardRow').hide();
+            }
+            
+            if(data.processor) {
+                $('#modalProcessor').text(data.processor);
+                $('#processorRow').show();
+            } else {
+                $('#processorRow').hide();
+            }
+            
+            if(data.memory) {
+                $('#modalMemory').text(data.memory);
+                $('#memoryRow').show();
+            } else {
+                $('#memoryRow').hide();
+            }
+            
+            if(data.harddisk_capacity) {
+                $('#modalHarddiskCapacity').text(data.harddisk_capacity);
+                $('#storageRow').show();
+            } else {
+                $('#storageRow').hide();
+            }
+            
+            if(data.os) {
+                $('#modalOs').text(data.os);
+                $('#osRow').show();
+            } else {
+                $('#osRow').hide();
+            }
+            
+            if(data.ms_office) {
+                $('#modalMsOffice').text(data.ms_office);
+                $('#msOfficeRow').show();
+            } else {
+                $('#msOfficeRow').hide();
+            }
+            
+            $('#modalLanConnected').text(data.lan_connected ? data.lan_connected.charAt(0).toUpperCase() + data.lan_connected.slice(1) : '—');
+            $('#modalInternetConnected').text(data.internet_connected ? data.internet_connected.charAt(0).toUpperCase() + data.internet_connected.slice(1) : '—');
+            $('#modalCondition').text(data.condition ? data.condition.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '—');
+            $('#modalAnalysis').text(data.analysis ? data.analysis.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '—');
+            $('#modalRecommendation').text(data.recommendation ? data.recommendation.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '—');
+            $('#modalRemarks').text(data.remarks || 'None');
+            
+            // Show modal
+            new bootstrap.Modal(document.getElementById('viewbtModal')).show();
+        },
+        error: function(xhr, status, error) {
+            alert('Error loading assessment details: ' + error);
+            console.error('AJAX Error:', xhr.responseText);
+        }
+    });
+});
 });
 </script>
 @endpush

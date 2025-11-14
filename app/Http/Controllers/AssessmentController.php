@@ -112,13 +112,43 @@ public function assessment(Request $request)
         return response()->json(['success' => true, 'message' => 'Assessment added successfully!', 'assessment' => $assessment]);
     }
 
-    public function viewbt(Assessment $assessment)
-    {
-        if ($assessment->user_id !== auth()->id()) abort(403);
-        return response()->json([
-            'html' => view('assessment.partials.viewbt', compact('assessment'))->render(),
-        ]);
-    }
+public function viewbt(Assessment $assessment)
+{
+    if ($assessment->user_id !== auth()->id()) abort(403);
+
+    // Format dates
+    $dateAcquired = \Carbon\Carbon::parse($assessment->date_acquired)->format('F j, Y');
+    $dateAssessed = $assessment->date_assessed ? \Carbon\Carbon::parse($assessment->date_assessed)->format('F j, Y') : '';
+
+    // Prepare response data
+    $data = [
+        'id' => $assessment->id,
+        'name' => $assessment->name,
+        'care_of' => $assessment->care_of,
+        'department' => $assessment->department,
+        'division' => $assessment->division,
+        'equipment_type' => $assessment->equipment_type,
+        'model' => $assessment->model,
+        'motherboard' => $assessment->motherboard,
+        'processor' => $assessment->processor,
+        'memory' => $assessment->memory,
+        'harddisk_capacity' => $assessment->harddisk_capacity,
+        'os' => $assessment->os,
+        'ms_office' => $assessment->ms_office,
+        'lan_connected' => $assessment->lan_connected,
+        'internet_connected' => $assessment->internet_connected,
+        'condition' => $assessment->condition,
+        'analysis' => $assessment->analysis,
+        'recommendation' => $assessment->recommendation,
+        'remarks' => $assessment->remarks,
+        'assessed_by' => $assessment->assessed_by,
+        'date_acquired' => $dateAcquired,
+        'date_assessed' => $dateAssessed,
+    ];
+
+    return response()->json($data);
+}
+
 
     public function update(Request $request, Assessment $assessment)
     {
@@ -185,4 +215,11 @@ public function assessment(Request $request)
 
         return $request->validate($rules);
     }
+
+    // app/Models/Assessment.php
+    public function reassessments()
+    {
+        return $this->hasMany(Assessment::class, 'parent_id')->orderByDesc('date_assessed');
+    }
+
 }

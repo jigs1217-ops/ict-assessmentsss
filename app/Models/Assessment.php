@@ -33,5 +33,9 @@ protected $fillable = [
     'remarks',
     'assessed_by',
 ];
+    public function reassessments()
+    {
+        return $this->hasMany(Assessment::class, 'parent_id')->orderByDesc('date_assessed');
+    }
 }
 
