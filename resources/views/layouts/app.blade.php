@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ICT Equipment Assessment</title>
 
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     {{-- Vite (Tailwind + JS) --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 

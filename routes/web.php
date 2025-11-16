@@ -48,8 +48,7 @@ Route::middleware(['auth'])->group(function () {
 
     // AJAX modals for view and delete
     Route::get('/assessment/{assessment}/viewbt', [AssessmentController::class, 'viewbt'])->name('assessment.viewbt');
-    Route::post('/assessment/{assessment}/deletebt', [AssessmentController::class, 'deletebt'])->name('assessment.deletebt');
-
+    Route::delete('/assessment/{assessment}', [AssessmentController::class, 'destroy'])->name('assessment.destroy');
     // Store route (POST)
     Route::post('/assessment/store', [AssessmentController::class, 'store'])->name('assessment.store');
 });

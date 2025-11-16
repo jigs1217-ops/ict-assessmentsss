@@ -99,8 +99,8 @@ public function edit($id)
 {
     $assessment = Assessment::findOrFail($id);
     
-    // Debug: Check if the assessment has the right data
-    \Log::info('Editing assessment ID: ' . $id . ', Data: ', $assessment->toArray());
+    // Debug: Log the assessment data
+    \Log::info('Assessment edit data: ', $assessment->toArray());
     
     $deptSecList = DeptSecHelper::DeptSecList();
 
@@ -167,13 +167,14 @@ public function update(Request $request, Assessment $assessment)
 }
 
 
-    public function deletebt(Assessment $assessment)
-    {
-        if ($assessment->user_id !== auth()->id()) abort(403);
-        $assessment->delete();
+public function destroy(Assessment $assessment)
+{
+    if ($assessment->user_id !== auth()->id()) abort(403);
+    
+    $assessment->delete();
 
-        return response()->json(['success' => true, 'message' => 'Assessment deleted successfully!']);
-    }
+    return response()->json(['success' => true, 'message' => 'Assessment deleted successfully!']);
+}
 
     /** Validation logic */
     private function validateAssessment(Request $request)

@@ -38,22 +38,32 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="department" class="form-label">Department</label>
-                            <select name="department" id="department" class="form-select" required>
-                                <option value="">Select Department</option>
-                                @foreach($deptSecList as $deptCode => $divisions)
-                                <option value="{{ $deptCode }}" {{ old('department', $assessment->department) == $deptCode ? 'selected' : '' }}>
-                                    {{ $deptCode }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
+    <div class="col-md-6">
+        <label for="department" class="form-label">Department</label>
+        <select name="department" id="department" class="form-select" required>
+            <option value="">Select Department</option>
+            @foreach($deptSecList as $deptCode => $divisions)
+            <option value="{{ $deptCode }}" {{ old('department', $assessment->department) == $deptCode ? 'selected' : '' }}>
+                {{ $deptCode }}
+            </option>
+            @endforeach
+        </select>
+    </div>
 
-                        <div class="col-md-6" id="division-container">
-                            <!-- Populated dynamically -->
-                        </div>
-                    </div>
+    <div class="col-md-6" id="division-container">
+        <label class="form-label">Division</label>
+        <select name="division" class="form-select" required>
+            <option value="">Select Division</option>
+            @if($assessment->department && isset($deptSecList[$assessment->department]))
+                @foreach($deptSecList[$assessment->department] as $division)
+                    <option value="{{ $division }}" {{ old('division', $assessment->division) == $division ? 'selected' : '' }}>
+                        {{ $division }}
+                    </option>
+                @endforeach
+            @endif
+        </select>
+    </div>
+</div>
 
                     <div class="row g-3 mt-3">
                         <div class="col-md-6">
@@ -257,6 +267,13 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Store initial values from PHP
+    const initialCondition = "{{ old('condition', $assessment->condition) }}";
+    const initialAnalysis = "{{ old('analysis', $assessment->analysis) }}";
+    const initialRecommendation = "{{ old('recommendation', $assessment->recommendation) }}";
+    const initialDepartment = "{{ old('department', $assessment->department) }}";
+    const initialDivision = "{{ old('division', $assessment->division) }}";
+
     // ==================== DEPARTMENT / DIVISION ====================
     const department = document.getElementById('department');
     const divisionContainer = document.getElementById('division-container');
@@ -264,59 +281,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateDivisions() {
         const selectedDept = department.value;
-        divisionContainer.innerHTML = '<label class="form-label">Division</label>';
-
-        if (!selectedDept) {
-            divisionContainer.innerHTML += '<div class="form-control bg-light">Select a department first</div>';
-            return;
-        }
-
-        const divisions = deptSecList[selectedDept] || [];
-        if (divisions.length === 0) {
-            divisionContainer.innerHTML += '<div class="form-control bg-light">No divisions available</div>';
-            return;
-        }
-
-        if (divisions.length === 1) {
-            divisionContainer.innerHTML += `
-                <div class="form-control bg-light">${divisions[0]}</div>
-                <input type="hidden" name="division" value="${divisions[0]}">
-            `;
-            return;
-        }
-
-        const select = document.createElement('select');
-        select.name = 'division';
-        select.className = 'form-select';
-        select.required = true;
-        select.innerHTML = '<option value="">Select Division</option>' +
-            divisions.map(d => `<option value="${d}">${d}</option>`).join('');
-        divisionContainer.appendChild(select);
+        const divisionSelect = divisionContainer.querySelector('select');
         
-        // Set the value after creating the select
-        setTimeout(() => {
-            if ('{{ old('division', $assessment->division) }}') {
-                const divisionSelect = divisionContainer.querySelector('select[name="division"]');
-                if (divisionSelect) {
-                    divisionSelect.value = "{{ old('division', $assessment->division) }}";
-                }
-            }
-        }, 100);
+        if (!selectedDept || !deptSecList[selectedDept]) {
+            divisionSelect.innerHTML = '<option value="">Select a department first</option>';
+            divisionSelect.disabled = true;
+            return;
+        }
+
+        const divisions = deptSecList[selectedDept];
+        let options = '<option value="">Select Division</option>';
+        
+        divisions.forEach(division => {
+            options += `<option value="${division}">${division}</option>`;
+        });
+        
+        divisionSelect.innerHTML = options;
+        divisionSelect.disabled = false;
+        
+        // Set the saved division value if it exists for this department
+        if (initialDivision && selectedDept === initialDepartment) {
+            divisionSelect.value = initialDivision;
+        }
     }
 
     if (department) {
         department.addEventListener('change', updateDivisions);
-        updateDivisions();
-        
-        // Set initial division value if exists
-        @if($assessment->division)
-        setTimeout(() => {
-            const divisionSelect = divisionContainer.querySelector('select[name="division"]');
-            if (divisionSelect) {
-                divisionSelect.value = "{{ $assessment->division }}";
-            }
-        }, 100);
-        @endif
     }
 
     // ==================== EQUIPMENT TYPE ====================
@@ -345,7 +335,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const show = config[selected] || [];
         specSection.classList.toggle('d-none', !selected);
 
-        // Reset all fields
         Object.values(fieldMap).forEach(id => {
             const field = document.getElementById(id);
             field.classList.add('d-none');
@@ -365,21 +354,36 @@ document.addEventListener('DOMContentLoaded', function () {
             if (el) el.selectedIndex = 0;
         });
 
-        // Show relevant fields
         show.forEach(key => document.getElementById(fieldMap[key]).classList.remove('d-none'));
+        
+        // Set values after fields are shown
+        if (selected === 'Desktop Computer' || selected === 'Laptop Computer' || selected === 'Server Computer') {
+            document.getElementById('processor').value = "{{ old('processor', $assessment->processor) }}";
+            document.getElementById('memory').value = "{{ old('memory', $assessment->memory) }}";
+            document.getElementById('harddisk_capacity').value = "{{ old('harddisk_capacity', $assessment->harddisk_capacity) }}";
+            document.getElementById('os').value = "{{ old('os', $assessment->os) }}";
+        }
+        
+        if (selected === 'Desktop Computer' || selected === 'Server Computer') {
+            document.getElementById('motherboard').value = "{{ old('motherboard', $assessment->motherboard) }}";
+        }
+        
+        if (selected === 'Desktop Computer' || selected === 'Laptop Computer') {
+            document.getElementById('ms_office').value = "{{ old('ms_office', $assessment->ms_office) }}";
+        }
+        
+        if (['Desktop Computer', 'Laptop Computer', 'Network Printer / All-in-one Printer', 'Server Computer'].includes(selected)) {
+            const lanSelect = document.getElementById('lan_connected');
+            if (lanSelect) lanSelect.value = "{{ old('lan_connected', $assessment->lan_connected) }}";
+            
+            const internetSelect = document.getElementById('internet_connected');
+            if (internetSelect) internetSelect.value = "{{ old('internet_connected', $assessment->internet_connected) }}";
+        }
     }
 
     if (equipmentType) {
         equipmentType.addEventListener('change', updateFields);
         updateFields();
-        
-        // Set the equipment type value after everything is loaded
-        setTimeout(() => {
-            if ('{{ old('equipment_type', $assessment->equipment_type) }}') {
-                equipmentType.value = "{{ old('equipment_type', $assessment->equipment_type) }}";
-                updateFields(); // Trigger the update to show/hide fields
-            }
-        }, 100);
     }
 
     // ==================== CONDITION / ANALYSIS / RECOMMENDATION ====================
@@ -387,17 +391,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const analysisOutput = document.getElementById('analysis_output');
     const recommendationOutput = document.getElementById('recommendation_output');
 
-    // Hidden inputs to store values for submission
     const hiddenAnalysisInput = document.createElement('input');
     hiddenAnalysisInput.type = 'hidden';
     hiddenAnalysisInput.name = 'analysis';
-    hiddenAnalysisInput.value = "{{ old('analysis', $assessment->analysis) }}";
+    hiddenAnalysisInput.value = initialAnalysis;
     document.body.appendChild(hiddenAnalysisInput);
 
     const hiddenRecommendationInput = document.createElement('input');
     hiddenRecommendationInput.type = 'hidden';
     hiddenRecommendationInput.name = 'recommendation';
-    hiddenRecommendationInput.value = "{{ old('recommendation', $assessment->recommendation) }}";
+    hiddenRecommendationInput.value = initialRecommendation;
     document.body.appendChild(hiddenRecommendationInput);
 
     const opts = {
@@ -438,7 +441,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function populateAnalysis(cond) {
         const condObj = opts[cond];
         if (!condObj) {
-            // Reset both analysis and recommendation dropdowns
             analysisOutput.innerHTML = `<select name="analysis" class="form-select" required>
                 <option value="">Select an analysis</option>
             </select>`;
@@ -448,7 +450,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Populate analysis dropdown
         const analysisOptions = condObj.analysis;
         analysisOutput.innerHTML = `<select name="analysis" class="form-select" required>
             <option value="">Select</option>
@@ -456,24 +457,19 @@ document.addEventListener('DOMContentLoaded', function () {
         </select>`;
 
         const analysisSelect = analysisOutput.querySelector('select');
-        if (analysisOptions.length === 1) {
-            // Auto-select the only option and gray out the dropdown
-            analysisSelect.value = analysisOptions[0].value;
-            analysisSelect.disabled = true;
 
-            // Update hidden input
+        if (analysisOptions.length === 1) {
+            analysisSelect.value = analysisOptions[0].value;
             hiddenAnalysisInput.value = analysisOptions[0].value;
         } else {
-            analysisSelect.disabled = false; // Ensure dropdown is enabled
-            hiddenAnalysisInput.value = ''; // Clear hidden input
+            hiddenAnalysisInput.value = ''; 
         }
 
-        // Reset recommendation dropdown
-        populateRecommendation(cond, null);
+        const currentAnalysisValue = analysisSelect.value;
+        populateRecommendation(cond, currentAnalysisValue);
 
-        // Add event listener to update recommendation when analysis changes
         analysisSelect.addEventListener('change', e => {
-            hiddenAnalysisInput.value = e.target.value; // Update hidden input
+            hiddenAnalysisInput.value = e.target.value;
             populateRecommendation(cond, e.target.value);
         });
     }
@@ -495,67 +491,56 @@ document.addEventListener('DOMContentLoaded', function () {
         </select>`;
 
         const recommendationSelect = recommendationOutput.querySelector('select');
-        if (recOptions.length === 1) {
-            // Auto-select the only option and gray out the dropdown
-            recommendationSelect.value = recOptions[0].value;
-            recommendationSelect.disabled = true;
 
-            // Update hidden input
+        if (recOptions.length === 1) {
+            recommendationSelect.value = recOptions[0].value;
             hiddenRecommendationInput.value = recOptions[0].value;
         } else {
-            recommendationSelect.disabled = false; // Ensure dropdown is enabled
-            hiddenRecommendationInput.value = ''; // Clear hidden input
+            hiddenRecommendationInput.value = ''; 
         }
 
-        // Add event listener to update hidden input when recommendation changes
         recommendationSelect.addEventListener('change', e => {
-            hiddenRecommendationInput.value = e.target.value; // Update hidden input
+            hiddenRecommendationInput.value = e.target.value;
         });
     }
 
     if (condition) {
-        // Keep analysis and recommendation always visible
         document.getElementById('section_analysis').classList.remove('d-none');
         document.getElementById('section_recommendation').classList.remove('d-none');
 
-        // Add event listener to update analysis and recommendation when condition changes
         condition.addEventListener('change', e => {
             populateAnalysis(e.target.value);
         });
 
-        // Initialize with default values
         populateAnalysis(condition.value);
-        
-        // Set initial values after everything is populated
+
         setTimeout(() => {
-            // Set condition value
-            if ('{{ old('condition', $assessment->condition) }}') {
-                condition.value = "{{ old('condition', $assessment->condition) }}";
-                populateAnalysis(condition.value);
+            if (initialCondition) {
+                condition.value = initialCondition;
+                populateAnalysis(initialCondition);
             }
-            
-            // Set analysis value
-            if (hiddenAnalysisInput.value) {
-                const analysisSelect = analysisOutput.querySelector('select');
-                if (analysisSelect) {
-                    analysisSelect.value = hiddenAnalysisInput.value;
-                    if (analysisSelect.querySelectorAll('option').length === 1) {
-                        analysisSelect.disabled = true;
+
+            if (initialAnalysis) {
+                setTimeout(() => {
+                    const analysisSelect = analysisOutput.querySelector('select');
+                    if (analysisSelect) {
+                        analysisSelect.value = initialAnalysis;
+                        hiddenAnalysisInput.value = initialAnalysis;
+                        populateRecommendation(initialCondition, initialAnalysis);
                     }
-                }
+                }, 100);
             }
-            
-            // Set recommendation value
-            if (hiddenRecommendationInput.value) {
-                const recommendationSelect = recommendationOutput.querySelector('select');
-                if (recommendationSelect) {
-                    recommendationSelect.value = hiddenRecommendationInput.value;
-                    if (recommendationSelect.querySelectorAll('option').length === 1) {
-                        recommendationSelect.disabled = true;
+
+            if (initialRecommendation) {
+                setTimeout(() => {
+                    const recommendationSelect = recommendationOutput.querySelector('select');
+                    if (recommendationSelect) {
+                        recommendationSelect.value = initialRecommendation;
+                        hiddenRecommendationInput.value = initialRecommendation;
                     }
-                }
+                }, 150);
             }
-        }, 300);
+        }, 200);
     }
 
     // ==================== AJAX FORM SUBMISSION ====================
@@ -564,18 +549,12 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // Create FormData object
             const formData = new FormData(form);
-
-            // Manually add hidden inputs to FormData
             formData.set('analysis', hiddenAnalysisInput.value);
             formData.set('recommendation', hiddenRecommendationInput.value);
 
-            // Get the HTTP method
-            const method = form.querySelector('input[name=_method]')?.value || form.method;
-
             fetch(form.action, {
-                method: method.toUpperCase(),
+                method: form.method.toUpperCase(),
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value,
                     'Accept': 'application/json'
@@ -583,11 +562,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData
             })
             .then(async res => {
-                if (!res.ok) {
-                    const text = await res.text();
-                    console.error('Laravel error:', text);
-                    throw new Error('HTTP ' + res.status);
-                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 return res.json();
             })
             .then(data => {
@@ -595,12 +570,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     const successModal = new bootstrap.Modal(document.getElementById('successModal'));
                     successModal.show();
-
-                    // Reset the form after successful submission
                     form.reset();
-                    hiddenAnalysisInput.value = ''; // Clear hidden analysis input
-                    hiddenRecommendationInput.value = ''; // Clear hidden recommendation input
-                    populateAnalysis(condition.value); // Reinitialize analysis and recommendation
+                    hiddenAnalysisInput.value = '';
+                    hiddenRecommendationInput.value = '';
+                    populateAnalysis(condition.value);
                 } else {
                     alert(data.message || 'Failed to update assessment.');
                 }

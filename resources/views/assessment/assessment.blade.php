@@ -126,8 +126,9 @@
 
     <!-- Delete Modal -->
     @include('assessment.partials.deletebt')
+
     <!-- View Modal -->
-@include('assessment.partials.viewbt')
+    @include('assessment.partials.viewbt')
 
 </div>
 @endsection
@@ -232,37 +233,42 @@ $(function() {
     // But we still need to attach pagination listeners
     attachPaginationListeners();
 
-    // ---------------- Delete Modal
-    let currentId = null;
-    $(document).on('click', '.delete-btn', function(){
-        currentId = $(this).data('id');
-        $('#modalAssessmentName').text($(this).data('name'));
-        $('#deleteForm').attr('action', `/assessment/${currentId}/deletebt`);
-        new bootstrap.Modal(document.getElementById('deletebtModal')).show();
-    });
+// ---------------- Delete Modal
+let currentId = null;
+$(document).on('click', '.delete-btn', function(){
+    currentId = $(this).data('id');
+    $('#modalAssessmentName').text($(this).data('name'));
+    $('#deleteForm').attr('action', `/assessment/${currentId}`); // Use resource route
+    new bootstrap.Modal(document.getElementById('deletebtModal')).show();
+});
 
-    $('#deleteForm').on('submit', function(e){
-        e.preventDefault();
-        $.ajax({
-            url: $(this).attr('action'),
-            type: 'POST',
-            data: $(this).serialize(),
-            success: function(res){
-                if(res.success){
-                    bootstrap.Modal.getInstance(document.getElementById('deletebtModal')).hide();
-                    $(`.delete-btn[data-id='${currentId}']`).closest('.assessment-card').remove();
-                    // Optional: Re-fetch current page to update counters
-                    const currentPage = new URL(window.location).searchParams.get('page') || 1;
-                    triggerFilter(currentPage);
-                } else {
-                    alert('Failed to delete.');
-                }
-            },
-            error: function(){
-                alert('Error deleting assessment.');
+$('#deleteForm').on('submit', function(e){
+    e.preventDefault();
+    
+    // Send DELETE request to the resource route
+    $.ajax({
+        url: $(this).attr('action'),
+        type: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(res){
+            if(res.success){
+                bootstrap.Modal.getInstance(document.getElementById('deletebtModal')).hide();
+                $(`.delete-btn[data-id='${currentId}']`).closest('.assessment-card').remove();
+                // Optional: Re-fetch current page to update counters
+                const currentPage = new URL(window.location).searchParams.get('page') || 1;
+                triggerFilter(currentPage);
+            } else {
+                alert('Failed to delete.');
             }
-        });
+        },
+        error: function(xhr){
+            console.error('Delete error:', xhr.responseText);
+            alert('Error deleting assessment: ' + (xhr.responseJSON?.message || 'Unknown error'));
+        }
     });
+});
 // ---------------- View Modal
 let currentViewId = null;
 $(document).on('click', '.view-btn', function(){
